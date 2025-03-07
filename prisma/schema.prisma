@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de usuário
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(DRIVER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  assistanceRequests AssistanceRequest[] @relation("DriverRequests")
+  assignedRequests   AssistanceRequest[] @relation("MechanicAssignments")
+}
+
+// Tipos de usuário
+enum Role {
+  DRIVER
+  MECHANIC
+  MANAGER
+}
+
+// Modelo de solicitação de assistência
+model AssistanceRequest {
+  id          String   @id @default(uuid())
+  problemType String
+  description String
+  location    String
+  status      Status   @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  driverId   String
+  driver     User    @relation("DriverRequests", fields: [driverId], references: [id])
+  mechanicId String?
+  mechanic   User?   @relation("MechanicAssignments", fields: [mechanicId], references: [id])
+}
+
+// Status da solicitação
+enum Status {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Tipos de problemas predefinidos
+model ProblemType {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+}
