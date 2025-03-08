@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "create-user": "node scripts/create-user.js",
+    "update-role": "node scripts/update-user-role.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
