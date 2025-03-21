@@ -29,27 +29,6 @@ export default function RequestActions({
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleAssignToMe = async () => {
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      await axios.patch(`/api/assistance-requests/${requestId}`, {
-        status: 'ASSIGNED',
-        action: 'assign',
-      });
-
-      setSuccess('Solicitação atribuída com sucesso!');
-      router.refresh();
-    } catch (error: unknown) {
-      const apiError = error as ApiError;
-      setError(apiError.response?.data?.message || 'Erro ao atribuir solicitação');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleUpdateStatus = async (newStatus: string) => {
     setIsLoading(true);
     setError(null);
@@ -89,13 +68,9 @@ export default function RequestActions({
 
       <div className="grid grid-cols-1 gap-4 mt-4 md:grid-cols-2">
         {currentStatus === 'PENDING' && !mechanicId && (
-          <button
-            onClick={handleAssignToMe}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {isLoading ? 'Processando...' : 'Atribuir a Mim'}
-          </button>
+          <div className="p-3 text-sm text-gray-500 bg-gray-100 rounded-md">
+            Esta solicitação está pendente de atribuição por um gerente.
+          </div>
         )}
 
         {currentStatus === 'ASSIGNED' && (

@@ -15,13 +15,14 @@ datasource db {
 
 // Modelo de usuário
 model User {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   name      String
-  email     String   @unique
+  email     String         @unique
   password  String
-  role      Role     @default(DRIVER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role           @default(DRIVER)
+  status    MechanicStatus @default(AVAILABLE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   // Relações
   assistanceRequests AssistanceRequest[] @relation("DriverRequests")
@@ -33,6 +34,12 @@ enum Role {
   DRIVER
   MECHANIC
   MANAGER
+}
+
+// Status do mecânico
+enum MechanicStatus {
+  AVAILABLE
+  BUSY
 }
 
 // Modelo de solicitação de assistência

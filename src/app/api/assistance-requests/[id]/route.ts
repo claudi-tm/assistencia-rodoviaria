@@ -18,7 +18,7 @@ export async function PATCH(
     }
 
     const { status, action } = await request.json();
-    const id = params.id;
+    const { id } = params;
 
     // Verificar se a solicitação existe
     const assistanceRequest = await prisma.assistanceRequest.findUnique({
@@ -34,10 +34,10 @@ export async function PATCH(
 
     // Verificar permissões com base na ação
     if (action === 'assign') {
-      // Apenas mecânicos podem atribuir solicitações a si mesmos
-      if (session.user.role !== 'MECHANIC') {
+      // Apenas gerentes podem atribuir solicitações a mecânicos
+      if (session.user.role !== 'MANAGER') {
         return NextResponse.json(
-          { message: 'Apenas mecânicos podem atribuir solicitações' },
+          { message: 'Apenas gerentes podem atribuir solicitações a mecânicos' },
           { status: 403 }
         );
       }
@@ -127,7 +127,7 @@ export async function GET(
       );
     }
 
-    const id = params.id;
+    const { id } = params;
 
     // Buscar a solicitação
     const assistanceRequest = await prisma.assistanceRequest.findUnique({

@@ -37,7 +37,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       { name: 'Dashboard', href: '/dashboard/manager' },
       { name: 'Todas Solicitações', href: '/dashboard/manager/requests' },
       { name: 'Gerenciar Mecânicos', href: '/dashboard/manager/mechanics' },
-      { name: 'Gerenciar Condutores', href: '/dashboard/manager/drivers' },
       { name: 'Relatórios', href: '/dashboard/manager/reports' },
       { name: 'Perfil', href: '/dashboard/manager/profile' },
     ],

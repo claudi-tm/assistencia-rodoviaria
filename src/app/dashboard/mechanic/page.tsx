@@ -25,6 +25,13 @@ export default async function MechanicDashboard() {
     }
   }
 
+  // Buscar informações do mecânico, incluindo o status
+  const mechanic = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+  });
+
   // Buscar as solicitações pendentes
   const pendingRequests = await prisma.assistanceRequest.findMany({
     where: {
@@ -96,7 +103,20 @@ export default async function MechanicDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard do Mecânico</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Dashboard do Mecânico</h1>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">Status:</span>
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full ${mechanic?.status === 'AVAILABLE'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+              }`}
+          >
+            {mechanic?.status === 'AVAILABLE' ? 'Disponível' : 'Ocupado'}
+          </span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <div className="p-6 bg-white rounded-lg shadow">
@@ -150,7 +170,7 @@ export default async function MechanicDashboard() {
                       </td>
                       <td className="p-3">
                         <Link
-                          href={`/dashboard/mechanic/request/${request.id}`}
+                          href={`/dashboard/mechanic/requests/${request.id}`}
                           className="text-indigo-600 hover:text-indigo-800"
                         >
                           Ver detalhes
@@ -182,6 +202,7 @@ export default async function MechanicDashboard() {
                     <th className="p-3">Tipo de Problema</th>
                     <th className="p-3">Status</th>
                     <th className="p-3">Condutor</th>
+                    <th className="p-3">Data</th>
                     <th className="p-3">Ações</th>
                   </tr>
                 </thead>
@@ -200,13 +221,22 @@ export default async function MechanicDashboard() {
                         </span>
                       </td>
                       <td className="p-3">{request.driver.name}</td>
-                      <td className="p-3">
-                        <Link
-                          href={`/dashboard/mechanic/request/${request.id}`}
-                          className="text-indigo-600 hover:text-indigo-800"
-                        >
-                          Ver detalhes
-                        </Link>
+                      <td className="p-3">{new Date(request.createdAt).toLocaleDateString()}</td>
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <Link
+                            href={`/api/requests/${request.id}/complete`}
+                            className="px-3 py-1 text-xs text-green-600 bg-green-100 rounded-md hover:bg-green-200"
+                          >
+                            Concluir
+                          </Link>
+                          <Link
+                            href={`/dashboard/mechanic/requests/${request.id}`}
+                            className="px-3 py-1 text-xs text-indigo-600 bg-indigo-100 rounded-md hover:bg-indigo-200"
+                          >
+                            Detalhes
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

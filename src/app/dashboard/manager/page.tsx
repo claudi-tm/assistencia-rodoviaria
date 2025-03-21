@@ -51,16 +51,23 @@ export default async function ManagerDashboard() {
   });
 
   // Buscar mecânicos
-  const mechanics = await prisma.user.count({
+  const totalMechanics = await prisma.user.count({
     where: {
       role: 'MECHANIC',
     },
   });
 
-  // Buscar condutores
-  const drivers = await prisma.user.count({
+  const availableMechanics = await prisma.user.count({
     where: {
-      role: 'DRIVER',
+      role: 'MECHANIC',
+      status: 'AVAILABLE',
+    },
+  });
+
+  const busyMechanics = await prisma.user.count({
+    where: {
+      role: 'MECHANIC',
+      status: 'BUSY',
     },
   });
 
@@ -107,15 +114,15 @@ export default async function ManagerDashboard() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold">Equipe</h2>
+          <h2 className="text-xl font-semibold">Equipe de Mecânicos</h2>
           <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="p-4 text-center bg-indigo-50 rounded-lg">
-              <h3 className="text-lg font-medium">Mecânicos</h3>
-              <p className="mt-2 text-2xl font-bold text-indigo-600">{mechanics}</p>
+            <div className="p-4 text-center bg-green-50 rounded-lg">
+              <h3 className="text-lg font-medium">Disponíveis</h3>
+              <p className="mt-2 text-2xl font-bold text-green-600">{availableMechanics}</p>
             </div>
-            <div className="p-4 text-center bg-indigo-50 rounded-lg">
-              <h3 className="text-lg font-medium">Condutores</h3>
-              <p className="mt-2 text-2xl font-bold text-indigo-600">{drivers}</p>
+            <div className="p-4 text-center bg-red-50 rounded-lg">
+              <h3 className="text-lg font-medium">Ocupados</h3>
+              <p className="mt-2 text-2xl font-bold text-red-600">{busyMechanics}</p>
             </div>
           </div>
           <div className="flex justify-end mt-4">
@@ -165,6 +172,7 @@ export default async function ManagerDashboard() {
                   <th className="p-3">Status</th>
                   <th className="p-3">Mecânico</th>
                   <th className="p-3">Data</th>
+                  <th className="p-3">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -199,6 +207,14 @@ export default async function ManagerDashboard() {
                     <td className="p-3">{request.mechanic?.name || '-'}</td>
                     <td className="p-3">
                       {new Date(request.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="p-3">
+                      <Link
+                        href={`/dashboard/manager/requests/${request.id}`}
+                        className="px-3 py-1 text-xs text-indigo-600 bg-indigo-100 rounded-md hover:bg-indigo-200"
+                      >
+                        Detalhes
+                      </Link>
                     </td>
                   </tr>
                 ))}

@@ -4,11 +4,10 @@ import { Metadata } from 'next';
 import { getServerSession } from 'next-auth/next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import RequestActions from './request-actions';
 
 export const metadata: Metadata = {
   title: 'Detalhes da Solicitação | Assistência Rodoviária',
-  description: 'Visualize os detalhes da solicitação de assistência',
+  description: 'Detalhes da solicitação de assistência rodoviária',
 };
 
 export default async function MechanicRequestDetailsPage({
@@ -36,6 +35,7 @@ export default async function MechanicRequestDetailsPage({
   const request = await prisma.assistanceRequest.findUnique({
     where: {
       id,
+      mechanicId: session.user.id, // Garantir que o mecânico só veja suas próprias solicitações
     },
     include: {
       driver: {
@@ -43,13 +43,7 @@ export default async function MechanicRequestDetailsPage({
           id: true,
           name: true,
           email: true,
-        },
-      },
-      mechanic: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
+          phone: true,
         },
       },
     },
@@ -58,31 +52,12 @@ export default async function MechanicRequestDetailsPage({
   if (!request) {
     return (
       <div className="p-6 text-center bg-white rounded-lg shadow">
-        <p className="text-red-500">Solicitação não encontrada.</p>
+        <p className="text-red-500">Solicitação não encontrada ou você não tem permissão para visualizá-la.</p>
         <Link
           href="/dashboard/mechanic"
           className="inline-block px-4 py-2 mt-4 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
         >
-          Voltar ao Dashboard
-        </Link>
-      </div>
-    );
-  }
-
-  // Verificar se o mecânico pode ver esta solicitação
-  const canViewRequest =
-    request.status === 'PENDING' ||
-    request.mechanicId === session.user.id;
-
-  if (!canViewRequest) {
-    return (
-      <div className="p-6 text-center bg-white rounded-lg shadow">
-        <p className="text-red-500">Você não tem permissão para visualizar esta solicitação.</p>
-        <Link
-          href="/dashboard/mechanic"
-          className="inline-block px-4 py-2 mt-4 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-        >
-          Voltar ao Dashboard
+          Voltar para o Dashboard
         </Link>
       </div>
     );
@@ -96,7 +71,7 @@ export default async function MechanicRequestDetailsPage({
           href="/dashboard/mechanic"
           className="px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-600 rounded-md hover:bg-indigo-50"
         >
-          Voltar ao Dashboard
+          Voltar para o Dashboard
         </Link>
       </div>
 
@@ -104,7 +79,7 @@ export default async function MechanicRequestDetailsPage({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">{request.problemType}</h2>
           <span
-            className={`px-2 py-1 text-xs font-semibold rounded-full ${request.status === 'PENDING'
+            className={`px-2 py-1 text-xs font-medium rounded-full ${request.status === 'PENDING'
               ? 'bg-yellow-100 text-yellow-800'
               : request.status === 'ASSIGNED'
                 ? 'bg-blue-100 text-blue-800'
@@ -140,18 +115,13 @@ export default async function MechanicRequestDetailsPage({
 
           <div>
             <p className="text-sm font-medium text-gray-500">Condutor</p>
-            <p className="mt-1 text-lg">
-              {request.driver.name} ({request.driver.email})
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-gray-500">Mecânico Atribuído</p>
-            <p className="mt-1 text-lg">
-              {request.mechanic
-                ? `${request.mechanic.name} (${request.mechanic.email})`
-                : 'Nenhum mecânico atribuído'}
-            </p>
+            <div className="mt-1">
+              <p className="text-lg">{request.driver.name}</p>
+              <p className="text-sm text-gray-600">Email: {request.driver.email}</p>
+              {request.driver.phone && (
+                <p className="text-sm text-gray-600">Telefone: {request.driver.phone}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -182,11 +152,44 @@ export default async function MechanicRequestDetailsPage({
         </div>
       </div>
 
-      <RequestActions
-        requestId={request.id}
-        currentStatus={request.status}
-        mechanicId={request.mechanicId}
-      />
+      <div className="p-6 bg-white rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4">Ações</h2>
+
+        <div className="grid grid-cols-1 gap-4 mt-4 md:grid-cols-2">
+          {(request.status === 'ASSIGNED' || request.status === 'IN_PROGRESS') && (
+            <>
+              {request.status === 'ASSIGNED' && (
+                <Link
+                  href={`/api/requests/${request.id}/start`}
+                  className="block w-full px-4 py-2 text-sm font-medium text-center text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Iniciar Atendimento
+                </Link>
+              )}
+
+              <Link
+                href={`/api/requests/${request.id}/complete`}
+                className="block w-full px-4 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-md hover:bg-green-700"
+              >
+                Marcar como Concluída
+              </Link>
+
+              <Link
+                href={`/api/requests/${request.id}/cancel`}
+                className="block w-full px-4 py-2 text-sm font-medium text-center text-white bg-red-600 rounded-md hover:bg-red-700"
+              >
+                Cancelar Solicitação
+              </Link>
+            </>
+          )}
+
+          {(request.status === 'COMPLETED' || request.status === 'CANCELLED') && (
+            <p className="p-3 text-sm text-gray-500 bg-gray-100 rounded-md">
+              Esta solicitação já foi {request.status === 'COMPLETED' ? 'concluída' : 'cancelada'} e não pode ser modificada.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
-} 
+}
