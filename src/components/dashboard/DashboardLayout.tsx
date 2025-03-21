@@ -100,7 +100,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center">
             <span className="text-sm font-semibold text-gray-700">
               {session?.user?.name}
-              {session?.user?.role}
             </span>
           </div>
         </header>
